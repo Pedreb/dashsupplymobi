@@ -6,8 +6,253 @@ from plotly.subplots import make_subplots
 import numpy as np
 from datetime import datetime
 import warnings
+import sqlite3
+import os
+from datetime import datetime
 
 warnings.filterwarnings('ignore')
+
+
+# Função para inicializar o banco de dados
+def init_database():
+    """Inicializa o banco de dados SQLite"""
+    conn = sqlite3.connect('supply_chain.db')
+    cursor = conn.cursor()
+
+    # Criar tabela para SC's
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS scs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            data DATE,
+            descricao TEXT,
+            status TEXT,
+            prioridade TEXT,
+            solicitante TEXT,
+            departamento TEXT,
+            categoria TEXT,
+            data_compra DATE,
+            pedido INTEGER,
+            tmc INTEGER,
+            pmp INTEGER,
+            valor REAL,
+            fornecedor TEXT,
+            comprador TEXT,
+            upload_timestamp DATETIME
+        )
+    ''')
+
+    # Criar tabela para Saving
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS saving (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            data DATE,
+            numero_pedido INTEGER,
+            fornecedor TEXT,
+            valor_inicial REAL,
+            valor_final REAL,
+            reducao_reais REAL,
+            reducao_percentual REAL,
+            comentarios_negociacao TEXT,
+            tipo_saving TEXT,
+            comprador TEXT,
+            upload_timestamp DATETIME
+        )
+    ''')
+
+    # Criar tabela para controle de uploads
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS upload_control (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            last_update DATETIME,
+            filename TEXT,
+            total_scs INTEGER,
+            total_saving INTEGER
+        )
+    ''')
+
+    conn.commit()
+    conn.close()
+
+
+# Função para salvar dados no banco
+def save_to_database(scs_df, saving_df, filename):
+    """Salva os dados no banco SQLite substituindo os anteriores"""
+    conn = sqlite3.connect('supply_chain.db')
+
+    try:
+        # Limpar dados anteriores
+        conn.execute('DELETE FROM scs')
+        conn.execute('DELETE FROM saving')
+        conn.execute('DELETE FROM upload_control')
+
+        # Timestamp do upload
+        upload_time = datetime.now()
+
+        # Preparar dados SCs para inserção
+        scs_data = scs_df.copy()
+        scs_data['upload_timestamp'] = upload_time
+
+        # Mapear colunas do DataFrame para o banco
+        scs_columns_map = {
+            'Data': 'data',
+            'Descrição': 'descricao',
+            'Status': 'status',
+            'Prioridade': 'prioridade',
+            'Solicitante': 'solicitante',
+            'Departamento': 'departamento',
+            'Categoria': 'categoria',
+            'Data da Compra': 'data_compra',
+            'Pedido': 'pedido',
+            'TMC': 'tmc',
+            'PMP': 'pmp',
+            'Valor': 'valor',
+            'Fornecedor': 'fornecedor',
+            'Comprador': 'comprador'
+        }
+
+        # Renomear colunas
+        scs_renamed = scs_data.rename(columns=scs_columns_map)
+
+        # Inserir dados SCs
+        scs_renamed.to_sql('scs', conn, if_exists='append', index=False)
+
+        # Preparar dados Saving para inserção
+        saving_data = saving_df.copy()
+        saving_data['upload_timestamp'] = upload_time
+
+        # Mapear colunas Saving
+        saving_columns_map = {
+            'Data': 'data',
+            'Número Pedido': 'numero_pedido',
+            'Fornecedor': 'fornecedor',
+            'VALOR INICIAL': 'valor_inicial',
+            'VALOR FINAL': 'valor_final',
+            'Redução R$': 'reducao_reais',
+            'Redução %': 'reducao_percentual',
+            'Comentários Negocição': 'comentarios_negociacao',
+            'Tipo de Saving': 'tipo_saving',
+            'Comprador': 'comprador'
+        }
+
+        # Renomear colunas
+        saving_renamed = saving_data.rename(columns=saving_columns_map)
+
+        # Inserir dados Saving
+        saving_renamed.to_sql('saving', conn, if_exists='append', index=False)
+
+        # Registrar controle do upload
+        conn.execute('''
+            INSERT INTO upload_control (last_update, filename, total_scs, total_saving)
+            VALUES (?, ?, ?, ?)
+        ''', (upload_time, filename, len(scs_df), len(saving_df)))
+
+        conn.commit()
+        return True, upload_time
+
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
+
+
+# Função para carregar dados do banco
+@st.cache_data
+def load_from_database():
+    """Carrega dados do banco SQLite"""
+    if not os.path.exists('supply_chain.db'):
+        return None, None, None
+
+    conn = sqlite3.connect('supply_chain.db')
+
+    try:
+        # Carregar SCs
+        scs_df = pd.read_sql_query('SELECT * FROM scs', conn)
+
+        # Carregar Saving
+        saving_df = pd.read_sql_query('SELECT * FROM saving', conn)
+
+        # Carregar info do último upload
+        upload_info = pd.read_sql_query('''
+            SELECT last_update, filename, total_scs, total_saving 
+            FROM upload_control 
+            ORDER BY last_update DESC 
+            LIMIT 1
+        ''', conn)
+
+        if not scs_df.empty:
+            # Converter colunas de data
+            scs_df['data'] = pd.to_datetime(scs_df['data'])
+            scs_df['data_compra'] = pd.to_datetime(scs_df['data_compra'])
+
+        if not saving_df.empty:
+            saving_df['data'] = pd.to_datetime(saving_df['data'])
+
+        # Renomear colunas de volta para o padrão original
+        scs_columns_reverse = {
+            'data': 'Data',
+            'descricao': 'Descrição',
+            'status': 'Status',
+            'prioridade': 'Prioridade',
+            'solicitante': 'Solicitante',
+            'departamento': 'Departamento',
+            'categoria': 'Categoria',
+            'data_compra': 'Data da Compra',
+            'pedido': 'Pedido',
+            'tmc': 'TMC',
+            'pmp': 'PMP',
+            'valor': 'Valor',
+            'fornecedor': 'Fornecedor',
+            'comprador': 'Comprador'
+        }
+
+        saving_columns_reverse = {
+            'data': 'Data',
+            'numero_pedido': 'Número Pedido',
+            'fornecedor': 'Fornecedor',
+            'valor_inicial': 'VALOR INICIAL',
+            'valor_final': 'VALOR FINAL',
+            'reducao_reais': 'Redução R$',
+            'reducao_percentual': 'Redução %',
+            'comentarios_negociacao': 'Comentários Negocição',
+            'tipo_saving': 'Tipo de Saving',
+            'comprador': 'Comprador'
+        }
+
+        scs_df = scs_df.rename(columns=scs_columns_reverse)
+        saving_df = saving_df.rename(columns=saving_columns_reverse)
+
+        return scs_df, saving_df, upload_info
+
+    except Exception as e:
+        st.error(f"Erro ao carregar do banco: {str(e)}")
+        return None, None, None
+    finally:
+        conn.close()
+
+
+# Função para exibir informações do último upload
+def display_last_update_info(upload_info):
+    """Exibe informações da última atualização"""
+    if upload_info is not None and not upload_info.empty:
+        last_update = pd.to_datetime(upload_info.iloc[0]['last_update'])
+        filename = upload_info.iloc[0]['filename']
+        total_scs = upload_info.iloc[0]['total_scs']
+        total_saving = upload_info.iloc[0]['total_saving']
+
+        # Formatar data brasileira
+        formatted_date = last_update.strftime("%d/%m/%Y às %H:%M:%S")
+
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
+                    color: white; padding: 1rem; border-radius: 8px; margin: 1rem 0;
+                    box-shadow: 0 2px 10px rgba(40, 167, 69, 0.3);">
+            <h4 style="margin: 0 0 0.5rem 0;">📊 Informações da Base de Dados</h4>
+            <p style="margin: 0;"><strong>📅 Última Atualização:</strong> {formatted_date}</p>
+            <p style="margin: 0;"><strong>📁 Arquivo:</strong> {filename}</p>
+            <p style="margin: 0;"><strong>📈 Registros SC's:</strong> {total_scs} | <strong>💰 Registros Saving:</strong> {total_saving}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # Configuração da página
 st.set_page_config(
@@ -239,6 +484,9 @@ def create_sample_data():
 
 # Função principal
 def main():
+    # Inicializar banco de dados
+    init_database()
+
     st.markdown('<h1 class="main-header">🚛 Dashboard Supply Chain - Mobi Transportes</h1>', unsafe_allow_html=True)
 
     # Upload do arquivo
@@ -250,24 +498,67 @@ def main():
     )
 
     # Carregar dados
-    scs_df, saving_df = load_data(uploaded_file)
+    scs_df = None
+    saving_df = None
+    upload_info = None
 
-    # Se não conseguir carregar, usar dados de exemplo
-    if scs_df is None or saving_df is None:
-        if uploaded_file is None:
+    if uploaded_file is not None:
+        # Processar novo upload
+        scs_df, saving_df = load_data(uploaded_file)
+        # Adicione este código logo após o título principal, antes dos filtros da sidebar
+
+        if upload_info is not None and not upload_info.empty:
+            last_update = pd.to_datetime(upload_info.iloc[0]['last_update'])
+            formatted_date = last_update.strftime("%d/%m/%Y às %H:%M")
+
+            st.markdown(f"""
+           <div style="background: linear-gradient(135deg, #EF8740 0%, #000000 90%); 
+                       color: white; padding: 1rem; border-radius: 8px; margin: 1rem 0;
+                       text-align: center; box-shadow: 0 2px 10px rgba(239, 135, 64, 0.3);">
+               <h4 style="margin: 0; font-weight: 600;">📅 Última Atualização: {formatted_date}</h4>
+           </div>
+           """, unsafe_allow_html=True)
+
+        if scs_df is not None and saving_df is not None:
+            # Salvar no banco de dados
+            success, result = save_to_database(scs_df, saving_df, uploaded_file.name)
+
+            if success:
+                st.success("✅ Arquivo carregado e salvo no banco de dados com sucesso!")
+                st.markdown("---")
+
+                # Limpar cache para forçar reload dos dados
+                load_from_database.clear()
+
+                # Carregar dados atualizados do banco
+                scs_df, saving_df, upload_info = load_from_database()
+
+                # Mostrar informações da atualização
+                display_last_update_info(upload_info)
+
+            else:
+                st.error(f"❌ Erro ao salvar no banco de dados: {result}")
+                st.markdown("### 🔍 Usando dados do upload atual")
+        else:
+            st.error("❌ Erro ao carregar o arquivo. Verifique se ele contém as abas 'SC's' e 'Saving'.")
+    else:
+        # Tentar carregar dados existentes do banco
+        scs_df, saving_df, upload_info = load_from_database()
+
+        if scs_df is not None and saving_df is not None:
+            st.info("📤 Dados carregados do banco de dados local. Faça upload de um novo arquivo para atualizar.")
+            # Mostrar informações da última atualização
+            display_last_update_info(upload_info)
+            st.markdown("---")
+        else:
             st.info("📤 Por favor, faça upload do arquivo Excel para começar a análise.")
             st.markdown("---")
             st.markdown("### 🔍 Preview com Dados de Exemplo")
             st.info("Enquanto isso, você pode ver como o dashboard funciona com dados de exemplo:")
-        else:
-            st.error("❌ Erro ao carregar o arquivo. Verifique se ele contém as abas 'SC's' e 'Saving'.")
-            st.markdown("### 🔍 Usando Dados de Exemplo")
 
-        scs_df, saving_df = create_sample_data()
-        st.warning("⚠️ Os dados mostrados abaixo são apenas exemplos para demonstração.")
-    else:
-        st.success("✅ Arquivo carregado com sucesso!")
-        st.markdown("---")
+            # Usar dados de exemplo
+            scs_df, saving_df = create_sample_data()
+            st.warning("⚠️ Os dados mostrados abaixo são apenas exemplos para demonstração.")
 
     # Sidebar com filtros
     if scs_df is not None and not scs_df.empty:
@@ -550,30 +841,59 @@ def main():
     # === SEÇÃO 6: ANÁLISE DE PRIORIDADES ===
     st.markdown('<div class="section-header">🎯 Análise de Prioridades</div>', unsafe_allow_html=True)
 
-    # Gráfico de pizza - Prioridades
-    prioridade_counts = scs_filtered['Prioridade'].value_counts()
-    fig_pizza = px.pie(
-        values=prioridade_counts.values,
-        names=prioridade_counts.index,
-        title="🥧 Distribuição por Tipo de Prioridade",
-        color_discrete_sequence=['#EF8740', '#000000', '#FFA366', '#333333', '#FFB580']
-    )
-    fig_pizza.update_traces(
-        textposition='inside',
-        textinfo='percent+label',
-        textfont_size=13,
-        textfont_color='white'
-    )
-    fig_pizza.update_layout(
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        font=dict(size=11, color='#000000'),
-        title_font_size=14,
-        title_font_color='#000000',
-        margin=dict(l=20, r=20, t=50, b=20),
-        height=400
-    )
-    st.plotly_chart(fig_pizza, use_container_width=True)
+    col1, col2 = st.columns(2)
+
+    with col1:
+        # Gráfico de pizza - Prioridades por Quantidade
+        prioridade_counts = scs_filtered['Prioridade'].value_counts()
+        fig_pizza_qtd = px.pie(
+            values=prioridade_counts.values,
+            names=prioridade_counts.index,
+            title="📊 Distribuição por Quantidade",
+            color_discrete_sequence=['#EF8740', '#000000', '#FFA366', '#333333', '#FFB580']
+        )
+        fig_pizza_qtd.update_traces(
+            textposition='inside',
+            textinfo='percent+label',
+            textfont_size=13,
+            textfont_color='white'
+        )
+        fig_pizza_qtd.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(size=11, color='#000000'),
+            title_font_size=14,
+            title_font_color='#000000',
+            margin=dict(l=20, r=20, t=50, b=20),
+            height=400
+        )
+        st.plotly_chart(fig_pizza_qtd, use_container_width=True)
+
+    with col2:
+        # Gráfico de pizza - Prioridades por Valor
+        prioridade_valores = scs_filtered.groupby('Prioridade')['Valor'].sum()
+        fig_pizza_valor = px.pie(
+            values=prioridade_valores.values,
+            names=prioridade_valores.index,
+            title="💰 Distribuição por Valor",
+            color_discrete_sequence=['#EF8740', '#000000', '#FFA366', '#333333', '#FFB580']
+        )
+        fig_pizza_valor.update_traces(
+            textposition='inside',
+            textinfo='percent+label',
+            textfont_size=13,
+            textfont_color='white'
+        )
+        fig_pizza_valor.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(size=11, color='#000000'),
+            title_font_size=14,
+            title_font_color='#000000',
+            margin=dict(l=20, r=20, t=50, b=20),
+            height=400
+        )
+        st.plotly_chart(fig_pizza_valor, use_container_width=True)
 
     # Funções auxiliares para mapeamento de colunas
     def find_column(df, possible_names):
@@ -643,12 +963,12 @@ def main():
 
     # Estrutura de dados removida (não exibir no dashboard)
 
-    # Buscar colunas na aba Saving (coluna B = posição 1)
-    pedido_col_saving = get_column_by_position(saving_df, 1)  # Coluna B
+    # Buscar colunas na aba Saving (coluna B = posição 2)
+    pedido_col_saving = get_column_by_position(saving_df, 2)  # Coluna B
     valor_final_col = find_column(saving_df, ['VALOR FINAL', 'Valor Final', 'Valor_Final', 'ValorFinal'])
 
-    # Buscar colunas na aba SC's (coluna I = posição 8)
-    pedido_col_scs = get_column_by_position(scs_df, 8)  # Coluna I
+    # Buscar colunas na aba SC's (coluna I = posição 9)
+    pedido_col_scs = get_column_by_position(scs_df, 9)  # Coluna I
     valor_col_scs = find_column(scs_df, ['Valor', 'VALOR', 'Valor Total', 'Total'])
 
     st.markdown("#### 🔗 Mapeamento de Colunas")
