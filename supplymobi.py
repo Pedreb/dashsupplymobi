@@ -870,30 +870,35 @@ def main():
         st.plotly_chart(fig_pizza_qtd, use_container_width=True)
 
     with col2:
-        # Gráfico de pizza - Prioridades por Valor
-        prioridade_valores = scs_filtered.groupby('Prioridade')['Valor'].sum()
-        fig_pizza_valor = px.pie(
-            values=prioridade_valores.values,
-            names=prioridade_valores.index,
+        # Gráfico de barras - Prioridades por Valor
+        prioridade_valores = scs_filtered.groupby('Prioridade')['Valor'].sum().reset_index()
+
+        fig_bar_valor = px.bar(
+            prioridade_valores,
+            x='Prioridade',
+            y='Valor',
             title="💰 Distribuição por Valor",
-            color_discrete_sequence=['#EF8740', '#000000', '#FFA366', '#333333', '#FFB580']
+            text='Valor'
         )
-        fig_pizza_valor.update_traces(
-            textposition='inside',
-            textinfo='percent+label',
-            textfont_size=13,
-            textfont_color='white'
+        fig_bar_valor.update_traces(
+            marker_color='#EF8740',
+            texttemplate='<b>R$ %{text:,.0f}</b>',
+            textposition='outside',
+            textfont_size=14,
+            textfont_color='#000000',
+            width=0.6
         )
-        fig_pizza_valor.update_layout(
+        fig_bar_valor.update_layout(
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
             font=dict(size=11, color='#000000'),
             title_font_size=14,
             title_font_color='#000000',
-            margin=dict(l=20, r=20, t=50, b=20),
-            height=400
+            margin=dict(l=20, r=20, t=50, b=50),
+            height=400,
+            yaxis=dict(range=[0, prioridade_valores['Valor'].max() * 1.15])
         )
-        st.plotly_chart(fig_pizza_valor, use_container_width=True)
+        st.plotly_chart(fig_bar_valor, use_container_width=True)
 
     # Funções auxiliares para mapeamento de colunas
     def find_column(df, possible_names):
