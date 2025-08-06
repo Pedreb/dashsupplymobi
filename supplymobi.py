@@ -870,8 +870,9 @@ def main():
         st.plotly_chart(fig_pizza_qtd, use_container_width=True)
 
     with col2:
-        # Gráfico de barras - Prioridades por Valor
+        # Gráfico de barras - Prioridades por Valor (ordenado do maior para o menor)
         prioridade_valores = scs_filtered.groupby('Prioridade')['Valor'].sum().reset_index()
+        prioridade_valores = prioridade_valores.sort_values('Valor', ascending=False)  # Ordenar do maior para o menor
 
         fig_bar_valor = px.bar(
             prioridade_valores,
