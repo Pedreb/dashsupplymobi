@@ -667,7 +667,7 @@ def main():
         st.markdown(create_kpi_card(tmc_geral, "TMC Médio Geral", "days"), unsafe_allow_html=True)
 
     # === SEÇÃO 3: PMPS (Prazo Médio de Pagamento Simples) ===
-    st.markdown('<div class="section-header">💳 Análise PMPS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">💳 Análise PMPS - Prazo Médio de Pagamento Simples</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns([3, 1])
 
@@ -707,7 +707,7 @@ def main():
         st.markdown(create_kpi_card(pmps_geral, "PMPS Médio Geral", "days"), unsafe_allow_html=True)
 
     # === SEÇÃO 4: PMPP (Prazo Médio de Pagamento Ponderado) ===
-    st.markdown('<div class="section-header">⚖️ Análise PMPP</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">⚖️ Análise PMPP - Prazo Médio de Pagamento Ponderado (R$)</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns([3, 1])
 
@@ -1092,3 +1092,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
