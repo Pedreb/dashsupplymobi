@@ -1077,8 +1077,8 @@ def main():
             valor_inicial_col = find_column(saving_df, ['VALOR INICIAL', 'Valor Inicial', 'Valor_Inicial'])
             saving_col = find_column(saving_df, ['Redução R$', 'Reducao R$', 'Saving', 'Economia'])
 
-            if valor_inicial_col and saving_col:
-                saving_percentage = (saving_df[saving_col].sum() / saving_df[valor_inicial_col].sum() * 100)
+            if saving_col:
+                saving_percentage = (saving_df[saving_col].sum() / scs_filtered['Valor'].sum() * 100)
             else:
                 saving_percentage = 0
         else:
