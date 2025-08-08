@@ -1058,6 +1058,79 @@ def main():
             else:
                 st.markdown('<div class="audit-success">Nenhuma divergência encontrada!</div>', unsafe_allow_html=True)
 
+    # === AUDITORIA DE DATAS ===
+    st.markdown("#### 📅 Auditoria de Datas")
+
+    # Buscar colunas de data
+    data_col_scs = find_column(scs_df, ['Data', 'Data da Compra', 'Data Compra', 'DATA'])
+    data_col_saving = find_column(saving_df, ['Data', 'DATA', 'Data Saving'])
+
+    if all([pedido_col_saving, data_col_saving, pedido_col_scs, data_col_scs]):
+        audit_dates_results = []
+
+        for _, saving_row in saving_df.iterrows():
+            pedido_num = saving_row[pedido_col_saving]
+            data_saving = pd.to_datetime(saving_row[data_col_saving]).date()
+
+            # Buscar pedido correspondente na aba SC's
+            scs_match = scs_df[scs_df[pedido_col_scs] == pedido_num]
+
+            if not scs_match.empty:
+                data_scs = pd.to_datetime(scs_match[data_col_scs].iloc[0]).date()
+
+                # Verificar se as datas são diferentes
+                if data_scs != data_saving:
+                    audit_dates_results.append({
+                        'Pedido': pedido_num,
+                        'Data SC\'s': data_scs.strftime('%d/%m/%Y'),
+                        'Data Saving': data_saving.strftime('%d/%m/%Y'),
+                        'Diferença (dias)': (data_saving - data_scs).days,
+                        'Status': 'DIVERGÊNCIA'
+                    })
+                else:
+                    audit_dates_results.append({
+                        'Pedido': pedido_num,
+                        'Data SC\'s': data_scs.strftime('%d/%m/%Y'),
+                        'Data Saving': data_saving.strftime('%d/%m/%Y'),
+                        'Diferença (dias)': 0,
+                        'Status': 'OK'
+                    })
+
+        if audit_dates_results:
+            audit_dates_df = pd.DataFrame(audit_dates_results)
+
+            # Separar divergências de datas
+            divergencias_datas = audit_dates_df[audit_dates_df['Status'] == 'DIVERGÊNCIA']
+            conformes_datas = audit_dates_df[audit_dates_df['Status'] == 'OK']
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown(f"**✅ Datas Conformes: {len(conformes_datas)}**")
+                if not conformes_datas.empty:
+                    st.markdown('<div class="audit-success">Datas consistentes!</div>', unsafe_allow_html=True)
+                    st.dataframe(conformes_datas[['Pedido', 'Data SC\'s', 'Data Saving']], use_container_width=True)
+
+            with col2:
+                st.markdown(f"**⚠️ Divergências de Data: {len(divergencias_datas)}**")
+                if not divergencias_datas.empty:
+                    st.markdown('<div class="audit-alert">Atenção! Datas divergentes detectadas:</div>',
+                                unsafe_allow_html=True)
+                    st.dataframe(divergencias_datas, use_container_width=True)
+                else:
+                    st.markdown('<div class="audit-success">Nenhuma divergência de data encontrada!</div>',
+                                unsafe_allow_html=True)
+
+    else:
+        missing_date_cols = []
+        if not data_col_scs:
+            missing_date_cols.append("Data na aba SC's")
+        if not data_col_saving:
+            missing_date_cols.append("Data na aba Saving")
+
+        st.error(f"❌ **Auditoria de datas não disponível.**")
+        st.error(f"**Colunas de data não encontradas:** {', '.join(missing_date_cols)}")
+
     # === RESUMO EXECUTIVO ===
     st.markdown('<div class="section-header">📈 Resumo Executivo</div>', unsafe_allow_html=True)
 
@@ -1092,5 +1165,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
