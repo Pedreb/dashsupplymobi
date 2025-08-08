@@ -16,7 +16,7 @@ warnings.filterwarnings('ignore')
 # Função para inicializar o banco de dados
 def init_database():
     """Inicializa o banco de dados SQLite"""
-    conn = sqlite3.connect('supply_chain.db')
+    conn = sqlite3.connect('supply_chain.db', check_same_thread=False )
     cursor = conn.cursor()
 
     # Criar tabela para SC's
@@ -77,7 +77,7 @@ def init_database():
 # Função para salvar dados no banco
 def save_to_database(scs_df, saving_df, filename):
     """Salva os dados no banco SQLite substituindo os anteriores"""
-    conn = sqlite3.connect('supply_chain.db')
+    conn = sqlite3.connect('supply_chain.db', check_same_thread=False )
 
     try:
         # Limpar dados anteriores
@@ -163,7 +163,7 @@ def load_from_database():
     if not os.path.exists('supply_chain.db'):
         return None, None, None
 
-    conn = sqlite3.connect('supply_chain.db')
+    conn = sqlite3.connect('supply_chain.db', check_same_thread=False)
 
     try:
         # Carregar SCs
@@ -1092,4 +1092,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
