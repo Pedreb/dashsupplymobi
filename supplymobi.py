@@ -1215,6 +1215,70 @@ def main():
         pedidos_com_saving = len(saving_df) if not saving_df.empty else 0
         st.markdown(create_kpi_card(pedidos_com_saving, "Pedidos c/ Saving", "number"), unsafe_allow_html=True)
 
+    # === SEÇÃO: TOP PRODUTOS POR CATEGORIA ===
+    st.markdown('<div class="section-header">🏆 Top Produtos por Categoria (Top 10)</div>', unsafe_allow_html=True)
+
+    # Verificar se existe a coluna Categoria e Descrição
+    categoria_col = find_column(scs_filtered, ['Categoria', 'CATEGORIA', 'Category'])
+    descricao_col = find_column(scs_filtered, ['Descrição', 'DESCRIÇÃO', 'Descricao', 'Description', 'Produto'])
+
+    if categoria_col and descricao_col:
+        # Calcular top 10 categorias por gasto total
+        top_categorias = scs_filtered.groupby(categoria_col)['Valor'].sum().reset_index()
+        top_categorias = top_categorias.sort_values('Valor', ascending=False).head(10)
+
+        st.markdown(f"#### 📊 Análise das {len(top_categorias)} categorias com maior gasto")
+
+        # Para cada categoria do top 10, encontrar os top 5 produtos
+        for idx, categoria_row in top_categorias.iterrows():
+            categoria_nome = categoria_row[categoria_col]
+            categoria_valor = categoria_row['Valor']
+
+            # Filtrar produtos dessa categoria
+            produtos_categoria = scs_filtered[scs_filtered[categoria_col] == categoria_nome]
+
+            # Calcular top 5 produtos por gasto total na categoria
+            top_produtos = produtos_categoria.groupby(descricao_col)['Valor'].agg(['sum', 'count']).reset_index()
+            top_produtos.columns = ['Produto', 'Valor Total', 'Quantidade Pedidos']
+            top_produtos = top_produtos.sort_values('Valor Total', ascending=False).head(5)
+
+            # Calcular percentual em relação ao total da categoria
+            top_produtos['% da Categoria'] = (top_produtos['Valor Total'] / categoria_valor * 100).round(1)
+
+            # Formatar valores para exibição
+            top_produtos['Valor Formatado'] = top_produtos['Valor Total'].apply(lambda x: f"R$ {x:,.2f}")
+            top_produtos['% Formatado'] = top_produtos['% da Categoria'].apply(lambda x: f"{x}%")
+
+            # Criar expander para cada categoria
+            with st.expander(f"🔍 **{categoria_nome}** - Total: R$ {categoria_valor:,.2f}", expanded=False):
+                # Exibir tabela dos top 5 produtos
+                tabela_exibicao = top_produtos[
+                    ['Produto', 'Valor Formatado', '% Formatado', 'Quantidade Pedidos']].copy()
+                tabela_exibicao.columns = ['📦 Produto', '💰 Valor Total', '📊 % da Categoria', '🔢 Qtd Pedidos']
+
+                # Resetar index para mostrar ranking
+                tabela_exibicao.index = range(1, len(tabela_exibicao) + 1)
+
+                st.dataframe(tabela_exibicao, use_container_width=True)
+
+                # Mostrar resumo da categoria
+                total_produtos_categoria = len(produtos_categoria[descricao_col].unique())
+                st.markdown(f"""
+                <div style="background: rgba(239, 135, 64, 0.1); padding: 0.5rem; border-radius: 5px; margin-top: 0.5rem;">
+                    <small><strong>Resumo:</strong> {total_produtos_categoria} produtos únicos | 
+                    Top 5 representa {top_produtos['% da Categoria'].sum():.1f}% do gasto da categoria</small>
+                </div>
+                """, unsafe_allow_html=True)
+
+    else:
+        missing_cols = []
+        if not categoria_col:
+            missing_cols.append("Categoria")
+        if not descricao_col:
+            missing_cols.append("Descrição/Produto")
+
+        st.error(f"❌ **Análise não disponível.**")
+        st.error(f"**Colunas não encontradas:** {', '.join(missing_cols)}")
 
 if __name__ == "__main__":
     main()
