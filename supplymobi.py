@@ -959,6 +959,59 @@ def main():
                 # KPI Saving Total
                 saving_total = saving_df[saving_col].sum()
                 st.markdown(create_kpi_card(saving_total, "Saving Total"), unsafe_allow_html=True)
+
+            # Gráfico Percentual de Saving por Comprador (abaixo dos anteriores)
+            if comprador_col_saving:
+                st.markdown("#### 📈 Percentual de Saving por Comprador")
+
+                # Calcular saving total por comprador (da aba Saving)
+                saving_por_comprador_total = saving_df.groupby(comprador_col_saving)[saving_col].sum().reset_index()
+
+                # Calcular compras totais por comprador (da aba SC's)
+                compras_por_comprador = scs_filtered.groupby('Comprador')['Valor'].sum().reset_index()
+
+                # Fazer merge dos dados
+                percentual_saving = pd.merge(
+                    saving_por_comprador_total,
+                    compras_por_comprador,
+                    left_on=comprador_col_saving,
+                    right_on='Comprador',
+                    how='inner'
+                )
+
+                # Calcular percentual de saving
+                percentual_saving['Percentual_Saving'] = (percentual_saving[saving_col] / percentual_saving[
+                    'Valor']) * 100
+
+                # Ordenar do maior para o menor percentual
+                percentual_saving = percentual_saving.sort_values('Percentual_Saving', ascending=False)
+
+                fig_perc_saving = px.bar(
+                    percentual_saving,
+                    x='Comprador',
+                    y='Percentual_Saving',
+                    title="📊 % Saving por Comprador (Saving Total ÷ Compras Totais)",
+                    text='Percentual_Saving'
+                )
+                fig_perc_saving.update_traces(
+                    marker_color='#EF8740',
+                    texttemplate='<b>%{text:.1f}%</b>',
+                    textposition='outside',
+                    textfont_size=14,
+                    textfont_color='#000000',
+                    width=0.6
+                )
+                fig_perc_saving.update_layout(
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    font=dict(size=11, color='#000000'),
+                    title_font_size=14,
+                    title_font_color='#000000',
+                    margin=dict(l=20, r=20, t=50, b=50),
+                    height=450,
+                    yaxis=dict(range=[0, percentual_saving['Percentual_Saving'].max() * 1.15])
+                )
+                st.plotly_chart(fig_perc_saving, use_container_width=True)
         else:
             st.warning("⚠️ Colunas de saving não encontradas na aba Saving")
     else:
@@ -1165,6 +1218,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
