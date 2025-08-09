@@ -627,7 +627,99 @@ def main():
         st.markdown(create_kpi_card(spend_total, "Spend Total"), unsafe_allow_html=True)
 
     # === SEÇÃO 2: TEMPO MÉDIO DE COMPRAS ===
-    st.markdown('<div class="section-header">⏱️ Análise de Tempo (TMC)</div>', unsafe_allow_html=True)
+    st.markdown('''
+    <div class="section-header">
+        ⏱️ Análise de Tempo (TMC) 
+        <span class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+                <div class="tooltip-arrow"></div>
+                <strong>TMC - Tempo Médio de Compras</strong><br><br>
+                Métrica que indica quantos dias em média cada comprador leva para processar e finalizar uma compra, desde a solicitação até a conclusão do pedido.<br><br>
+                <span style="color: #4CAF50;">✓ Valores menores = Maior eficiência operacional</span>
+            </div>
+        </span>
+    </div>
+
+    <style>
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #EF8740, #FF6B35);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+        }
+
+        .help-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            min-width: 320px;
+            max-width: 400px;
+            white-space: normal;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                min-width: 280px;
+                font-size: 12px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
     col1, col2 = st.columns([3, 1])
 
@@ -667,7 +759,100 @@ def main():
         st.markdown(create_kpi_card(tmc_geral, "TMC Médio Geral", "days"), unsafe_allow_html=True)
 
     # === SEÇÃO 3: PMPS (Prazo Médio de Pagamento Simples) ===
-    st.markdown('<div class="section-header">💳 Análise PMPS - Prazo Médio de Pagamento Simples</div>', unsafe_allow_html=True)
+    st.markdown('''
+    <div class="section-header">
+        💳 Análise PMPS - Prazo Médio de Pagamento Simples
+        <span class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+                <div class="tooltip-arrow"></div>
+                <strong>PMPS - Prazo Médio de Pagamento Simples</strong><br><br>
+                Métrica que calcula a média aritmética simples dos prazos de pagamento de todas as compras, independente do valor de cada uma. Todas as compras têm o mesmo peso no cálculo.<br><br>
+                <span style="color: #4CAF50;">📊 Fórmula: Σ(Prazos) ÷ Quantidade de Compras</span><br>
+                <span style="color: #2196F3;">📈 Ideal para análise de frequência operacional</span>
+            </div>
+        </span>
+    </div>
+
+    <style>
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #EF8740, #FF6B35);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+        }
+
+        .help-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            min-width: 380px;
+            max-width: 450px;
+            white-space: normal;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                min-width: 320px;
+                font-size: 12px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
     col1, col2 = st.columns([3, 1])
 
@@ -707,7 +892,100 @@ def main():
         st.markdown(create_kpi_card(pmps_geral, "PMPS Médio Geral", "days"), unsafe_allow_html=True)
 
     # === SEÇÃO 4: PMPP (Prazo Médio de Pagamento Ponderado) ===
-    st.markdown('<div class="section-header">⚖️ Análise PMPP - Prazo Médio de Pagamento Ponderado (R$)</div>', unsafe_allow_html=True)
+    st.markdown('''
+    <div class="section-header">
+        ⚖️ Análise PMPP - Prazo Médio de Pagamento Ponderado (R$)
+        <span class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+                <div class="tooltip-arrow"></div>
+                <strong>PMPP - Prazo Médio de Pagamento Ponderado</strong><br><br>
+                Métrica que calcula o prazo médio de pagamento considerando o peso (valor) de cada compra. Diferente do PMPS, que é uma média simples, o PMPP dá mais importância às compras de maior valor.<br><br>
+                <span style="color: #4CAF50;">📊 Fórmula: Σ(Prazo × Valor) ÷ Σ(Valor)</span><br>
+                <span style="color: #FFA726;">⚖️ Mais preciso para análise financeira</span>
+            </div>
+        </span>
+    </div>
+
+    <style>
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #EF8740, #FF6B35);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+        }
+
+        .help-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            min-width: 380px;
+            max-width: 450px;
+            white-space: normal;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                min-width: 320px;
+                font-size: 12px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
     col1, col2 = st.columns([3, 1])
 
@@ -916,7 +1194,101 @@ def main():
         return None
 
     # === SEÇÃO 6: ANÁLISE DE SAVINGS ===
-    st.markdown('<div class="section-header">💎 Análise de Savings</div>', unsafe_allow_html=True)
+    st.markdown('''
+    <div class="section-header">
+        💎 Análise de Savings
+        <span class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+                <div class="tooltip-arrow"></div>
+                <strong>Savings - Economia em Compras</strong><br><br>
+                Representa o valor economizado através de negociações, descontos por volume, mudanças de fornecedor ou outras estratégias de redução de custos.<br><br>
+                <span style="color: #4CAF50;">💰 Saving Total: Soma de todas as economias obtidas</span><br>
+                <span style="color: #2196F3;">📊 % Saving: (Economia Total ÷ Valor Total das Compras) × 100</span><br>
+                <span style="color: #FF9800;">🎯 Objetivo: Maximizar economias sem comprometer qualidade</span>
+            </div>
+        </span>
+    </div>
+
+    <style>
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #EF8740, #FF6B35);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+        }
+
+        .help-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            min-width: 400px;
+            max-width: 480px;
+            white-space: normal;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                min-width: 340px;
+                font-size: 12px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
     if not saving_df.empty:
         # Mapear coluna de saving
