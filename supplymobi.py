@@ -585,7 +585,101 @@ def main():
         return  # Sair da função se não há dados para processar
 
     # === SEÇÃO 1: SPENDING ANALYSIS ===
-    st.markdown('<div class="section-header">💰 Análise de Gastos</div>', unsafe_allow_html=True)
+    st.markdown('''
+    <div class="section-header">
+        💰 Análise de Gastos
+        <span class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+                <div class="tooltip-arrow"></div>
+                <strong>Análise de Gastos - Spend Total</strong><br><br>
+                Métrica fundamental que mostra o valor total investido em compras por cada comprador, permitindo identificar quem está gerenciando compras mais estratégicas.<br><br>
+                <span style="color: #4CAF50;">💰 Spend Total: Soma de todos os valores gastos no período</span><br>
+                <span style="color: #2196F3;">📊 Por Comprador: Comparação de performance de gastos</span><br>
+                <span style="color: #FF9800;">🎯 Objetivo: Controlar custos e otimizar orçamento</span>
+            </div>
+        </span>
+    </div>
+
+    <style>
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #EF8740, #FF6B35);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+        }
+
+        .help-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            min-width: 380px;
+            max-width: 450px;
+            white-space: normal;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                min-width: 320px;
+                font-size: 12px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
     # Layout responsivo
     col1, col2 = st.columns([3, 1])  # Proporção ajustada
@@ -1029,7 +1123,101 @@ def main():
         st.markdown(create_kpi_card(pmpp_geral, "PMPP Médio Geral", "days"), unsafe_allow_html=True)
 
     # === SEÇÃO 5: ANÁLISE DE FORNECEDORES ===
-    st.markdown('<div class="section-header">🏢 Top 5 Gastos por Fornecedor</div>', unsafe_allow_html=True)
+    st.markdown('''
+    <div class="section-header">
+        🏢 Top 5 Gastos por Fornecedor
+        <span class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+                <div class="tooltip-arrow"></div>
+                <strong>Top 5 Gastos por Fornecedor</strong><br><br>
+                Identifica os 5 fornecedores que mais receberam recursos financeiros no período, permitindo análise de concentração de gastos e dependência de fornecedores.<br><br>
+                <span style="color: #4CAF50;">🏆 Ranking: Ordenados do maior para o menor gasto</span><br>
+                <span style="color: #2196F3;">🔍 Análise: Concentração de fornecedores críticos</span><br>
+                <span style="color: #FF9800;">⚖️ Estratégia: Diversificar ou fortalecer parcerias</span>
+            </div>
+        </span>
+    </div>
+
+    <style>
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #EF8740, #FF6B35);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+        }
+
+        .help-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            min-width: 400px;
+            max-width: 480px;
+            white-space: normal;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                min-width: 340px;
+                font-size: 12px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
     # Verificar se a coluna Fornecedor existe
     if 'Fornecedor' in scs_filtered.columns:
@@ -1068,7 +1256,101 @@ def main():
         st.warning("⚠️ Coluna 'Fornecedor' não encontrada nos dados")
 
     # === SEÇÃO: TOP 5 CATEGORIAS ===
-    st.markdown('<div class="section-header">📦 Top 5 Gastos por Categoria</div>', unsafe_allow_html=True)
+    st.markdown('''
+    <div class="section-header">
+        📦 Top 5 Gastos por Categoria
+        <span class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+                <div class="tooltip-arrow"></div>
+                <strong>Top 5 Gastos por Categoria</strong><br><br>
+                Identifica as 5 categorias de produtos e serviços que mais consomem recursos financeiros, permitindo análise de onde estão concentrados os maiores investimentos em compras.<br><br>
+                <span style="color: #4CAF50;">🏆 Ranking: Categorias ordenadas por valor gasto</span><br>
+                <span style="color: #2196F3;">📊 Análise: Concentração de gastos por tipo de produto</span><br>
+                <span style="color: #FF9800;">🎯 Estratégia: Priorizar negociações nas categorias de maior impacto</span>
+            </div>
+        </span>
+    </div>
+
+    <style>
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #EF8740, #FF6B35);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+        }
+
+        .help-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            min-width: 420px;
+            max-width: 500px;
+            white-space: normal;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                min-width: 350px;
+                font-size: 12px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
     # Verificar se existe a coluna Categoria (pode ser 'Categoria', coluna G, ou posição 6)
     categoria_col = None
@@ -1117,7 +1399,102 @@ def main():
         st.warning("⚠️ Coluna 'Categoria' não encontrada nos dados (esperada na coluna G - posição 6)")
 
     # === SEÇÃO 6: ANÁLISE DE PRIORIDADES ===
-    st.markdown('<div class="section-header">🎯 Análise de Prioridades</div>', unsafe_allow_html=True)
+    st.markdown('''
+    <div class="section-header">
+        🎯 Análise de Prioridades
+        <span class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+                <div class="tooltip-arrow"></div>
+                <strong>Análise de Prioridades</strong><br><br>
+                Mostra a distribuição das compras por nível de prioridade (Normal, Urgente, Emergente), tanto em quantidade quanto em valor financeiro, permitindo avaliar a qualidade do processo.<br><br>
+                <span style="color: #4CAF50;">📊 Por Quantidade: Frequência de cada tipo de prioridade</span><br>
+                <span style="color: #2196F3;">💰 Por Valor: Impacto financeiro de cada prioridade</span><br>
+                <span style="color: #FF9800;">⚡ Emergente: Compras críticas que impactam operação</span><br>
+                <span style="color: #FFC107;">🎯 Objetivo: Reduzir compras emergentes e planejar melhor</span>
+            </div>
+        </span>
+    </div>
+
+    <style>
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #EF8740, #FF6B35);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+        }
+
+        .help-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            min-width: 420px;
+            max-width: 500px;
+            white-space: normal;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                min-width: 360px;
+                font-size: 12px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
 
@@ -1333,8 +1710,103 @@ def main():
                 st.markdown(create_kpi_card(saving_total, "Saving Total"), unsafe_allow_html=True)
 
             # Gráfico Percentual de Saving por Comprador (abaixo dos anteriores)
+            # Gráfico Percentual de Saving por Comprador (abaixo dos anteriores)
             if comprador_col_saving:
-                st.markdown("#### 📈 Percentual de Saving por Comprador")
+                st.markdown('''
+                <div style="font-size: 1.2rem; font-weight: 600; color: #000000; margin: 1.5rem 0 1rem 0;">
+                    📈 Percentual de Saving por Comprador
+                    <span class="tooltip-container">
+                        <span class="help-icon">?</span>
+                        <div class="tooltip-content">
+                            <div class="tooltip-arrow"></div>
+                            <strong>% Saving por Comprador</strong><br><br>
+                            Mostra a eficiência de cada comprador em gerar economias, calculando o percentual do saving total obtido em relação ao valor total de suas compras.<br><br>
+                            <span style="color: #4CAF50;">📊 Fórmula: (Saving Total ÷ Compras Totais) × 100</span><br>
+                            <span style="color: #2196F3;">🏆 Ranking: Do maior para o menor percentual</span><br>
+                            <span style="color: #FF9800;">🎯 Meta: Identificar compradores mais eficientes em negociação</span>
+                        </div>
+                    </span>
+                </div>
+
+                <style>
+                    .tooltip-container {
+                        position: relative;
+                        display: inline-block;
+                        margin-left: 8px;
+                    }
+
+                    .help-icon {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 18px;
+                        height: 18px;
+                        background: linear-gradient(135deg, #EF8740, #FF6B35);
+                        color: white;
+                        border-radius: 50%;
+                        font-size: 12px;
+                        font-weight: bold;
+                        cursor: help;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+                    }
+
+                    .help-icon:hover {
+                        transform: scale(1.1);
+                        box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+                    }
+
+                    .tooltip-content {
+                        position: absolute;
+                        bottom: 130%;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background: linear-gradient(145deg, #2c3e50, #34495e);
+                        color: white;
+                        padding: 16px 20px;
+                        border-radius: 12px;
+                        white-space: nowrap;
+                        opacity: 0;
+                        visibility: hidden;
+                        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                        z-index: 1000;
+                        min-width: 400px;
+                        max-width: 480px;
+                        white-space: normal;
+                        text-align: left;
+                        font-size: 13px;
+                        line-height: 1.4;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                    }
+
+                    .tooltip-arrow {
+                        position: absolute;
+                        top: 100%;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        width: 0;
+                        height: 0;
+                        border-left: 8px solid transparent;
+                        border-right: 8px solid transparent;
+                        border-top: 8px solid #2c3e50;
+                    }
+
+                    .tooltip-container:hover .tooltip-content {
+                        opacity: 1;
+                        visibility: visible;
+                        transform: translateX(-50%) translateY(-5px);
+                    }
+
+                    @media (max-width: 768px) {
+                        .tooltip-content {
+                            min-width: 340px;
+                            font-size: 12px;
+                            padding: 14px 16px;
+                        }
+                    }
+                </style>
+                ''', unsafe_allow_html=True)
 
                 # Calcular saving total por comprador (da aba Saving)
                 saving_por_comprador_total = saving_df.groupby(comprador_col_saving)[saving_col].sum().reset_index()
@@ -1390,7 +1862,102 @@ def main():
         st.info("ℹ️ Nenhum dado de saving disponível")
 
     # === SEÇÃO 8: AUDITORIA ===
-    st.markdown('<div class="section-header">🔍 Auditoria de Valores</div>', unsafe_allow_html=True)
+    st.markdown('''
+    <div class="section-header">
+        🔍 Auditoria de Valores
+        <span class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+                <div class="tooltip-arrow"></div>
+                <strong>Auditoria de Valores</strong><br><br>
+                Validação automática que compara os valores entre as abas SC's e Saving para identificar inconsistências nos dados. Garante a integridade das informações financeiras.<br><br>
+                <span style="color: #4CAF50;">✅ Conformes: Valores idênticos entre as abas</span><br>
+                <span style="color: #F44336;">⚠️ Divergências: Diferenças que precisam ser corrigidas</span><br>
+                <span style="color: #2196F3;">🔗 Chave: Número do pedido para relacionamento</span><br>
+                <span style="color: #FF9800;">🎯 Objetivo: Garantir qualidade e confiabilidade dos dados</span>
+            </div>
+        </span>
+    </div>
+
+    <style>
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #EF8740, #FF6B35);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+        }
+
+        .help-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            min-width: 440px;
+            max-width: 520px;
+            white-space: normal;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                min-width: 370px;
+                font-size: 12px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
     # Estrutura de dados removida (não exibir no dashboard)
 
@@ -1484,7 +2051,102 @@ def main():
                 st.markdown('<div class="audit-success">Nenhuma divergência encontrada!</div>', unsafe_allow_html=True)
 
     # === AUDITORIA DE DATAS ===
-    st.markdown("#### 📅 Auditoria de Datas")
+    st.markdown('''
+    <div style="font-size: 1.1rem; font-weight: 600; color: #000000; margin: 1.5rem 0 1rem 0;">
+        📅 Auditoria de Datas
+        <span class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+                <div class="tooltip-arrow"></div>
+                <strong>Auditoria de Datas</strong><br><br>
+                Validação que compara as datas entre as abas SC's e Saving para o mesmo número de pedido, identificando inconsistências temporais que podem indicar problemas de registro.<br><br>
+                <span style="color: #4CAF50;">✅ Datas Conformes: Mesma data em ambas as abas</span><br>
+                <span style="color: #F44336;">⚠️ Divergências: Diferenças de dias entre registros</span><br>
+                <span style="color: #2196F3;">📊 Diferença: Calculada em dias entre as datas</span><br>
+                <span style="color: #FF9800;">🎯 Objetivo: Garantir consistência temporal dos dados</span>
+            </div>
+        </span>
+    </div>
+
+    <style>
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #EF8740, #FF6B35);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+        }
+
+        .help-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            min-width: 450px;
+            max-width: 530px;
+            white-space: normal;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                min-width: 380px;
+                font-size: 12px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
     # Buscar colunas de data
     data_col_scs = find_column(scs_df, ['Data', 'Data da Compra', 'Data Compra', 'DATA'])
@@ -1557,7 +2219,102 @@ def main():
         st.error(f"**Colunas de data não encontradas:** {', '.join(missing_date_cols)}")
 
     # === RESUMO EXECUTIVO ===
-    st.markdown('<div class="section-header">📈 Resumo Executivo</div>', unsafe_allow_html=True)
+    st.markdown('''
+    <div class="section-header">
+        📈 Resumo Executivo
+        <span class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+                <div class="tooltip-arrow"></div>
+                <strong>Resumo Executivo</strong><br><br>
+                Visão consolidada dos principais KPIs do dashboard, apresentando métricas estratégicas para tomada de decisão executiva de forma rápida e objetiva.<br><br>
+                <span style="color: #4CAF50;">📦 Total de Pedidos: Volume operacional processado</span><br>
+                <span style="color: #2196F3;">🏢 Fornecedores Ativos: Diversidade da base de fornecimento</span><br>
+                <span style="color: #FF9800;">💰 % Saving Médio: Eficiência geral em economias</span><br>
+                <span style="color: #BA68C8;">🎯 Pedidos c/ Saving: Alcance das negociações bem-sucedidas</span>
+            </div>
+        </span>
+    </div>
+
+    <style>
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #EF8740, #FF6B35);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+        }
+
+        .help-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            min-width: 460px;
+            max-width: 540px;
+            white-space: normal;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                min-width: 390px;
+                font-size: 12px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -1588,7 +2345,102 @@ def main():
         st.markdown(create_kpi_card(pedidos_com_saving, "Pedidos c/ Saving", "number"), unsafe_allow_html=True)
 
     # === SEÇÃO: TOP PRODUTOS POR CATEGORIA ===
-    st.markdown('<div class="section-header">🏆 Top Produtos por Categoria (Top 10)</div>', unsafe_allow_html=True)
+    st.markdown('''
+    <div class="section-header">
+        🏆 Top Produtos por Categoria (Top 10)
+        <span class="tooltip-container">
+            <span class="help-icon">?</span>
+            <div class="tooltip-content">
+                <div class="tooltip-arrow"></div>
+                <strong>Top Produtos por Categoria (Top 10)</strong><br><br>
+                Análise detalhada que identifica os 5 produtos mais caros dentro de cada uma das 10 categorias que mais consomem recursos, permitindo foco nas negociações de maior impacto.<br><br>
+                <span style="color: #4CAF50;">🔍 Metodologia: Top 10 categorias → Top 5 produtos cada</span><br>
+                <span style="color: #2196F3;">📊 Dados: Valor total, % da categoria e quantidade de pedidos</span><br>
+                <span style="color: #FF9800;">💡 Insight: Concentração de gastos por produto específico</span><br>
+                <span style="color: #BA68C8;">🎯 Estratégia: Priorizar negociações nos itens de maior valor</span>
+            </div>
+        </span>
+    </div>
+
+    <style>
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #EF8740, #FF6B35);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(239, 135, 64, 0.3);
+        }
+
+        .help-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 135, 64, 0.5);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            min-width: 480px;
+            max-width: 560px;
+            white-space: normal;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .tooltip-content {
+                min-width: 400px;
+                font-size: 12px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+    ''', unsafe_allow_html=True)
 
     # Verificar se existe a coluna Categoria e Descrição
     categoria_col = find_column(scs_filtered, ['Categoria', 'CATEGORIA', 'Category'])
