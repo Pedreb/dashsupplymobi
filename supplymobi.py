@@ -73,6 +73,128 @@ def init_database():
     conn.commit()
     conn.close()
 
+    # Criar dimensão de datas
+    create_date_dimension()
+
+
+def create_date_dimension():
+    """Cria tabela dimensão de datas"""
+    conn = sqlite3.connect('supply_chain.db', check_same_thread=False)
+    cursor = conn.cursor()
+
+    # Criar tabela dimensão de datas
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS dim_datas (
+            data_key DATE PRIMARY KEY,
+            ano INTEGER,
+            mes INTEGER,
+            dia INTEGER,
+            nome_mes TEXT,
+            trimestre INTEGER,
+            semestre INTEGER,
+            dia_semana INTEGER,
+            nome_dia_semana TEXT,
+            dia_ano INTEGER,
+            semana_ano INTEGER,
+            eh_fim_semana BOOLEAN,
+            eh_inicio_mes BOOLEAN,
+            eh_fim_mes BOOLEAN
+        )
+    ''')
+
+    conn.commit()
+    conn.close()
+
+
+def populate_date_dimension(scs_df, saving_df):
+    """Popula a tabela dimensão com todas as datas únicas"""
+    conn = sqlite3.connect('supply_chain.db', check_same_thread=False)
+
+    try:
+        # Coletar todas as datas únicas
+        datas_scs = set(pd.to_datetime(scs_df['Data']).dt.date)
+        datas_saving = set(pd.to_datetime(saving_df['Data']).dt.date)
+
+        # Se houver coluna Data da Compra, incluir também
+        if 'Data da Compra' in scs_df.columns:
+            datas_compra = set(pd.to_datetime(scs_df['Data da Compra']).dt.date)
+            todas_datas = datas_scs.union(datas_saving).union(datas_compra)
+        else:
+            todas_datas = datas_scs.union(datas_saving)
+
+        # Limpar tabela anterior
+        conn.execute('DELETE FROM dim_datas')
+
+        # Nomes dos meses e dias
+        meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+
+        dias_semana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
+
+        # Inserir cada data
+        for data in todas_datas:
+            dt = pd.to_datetime(data)
+
+            # Calcular atributos
+            ano = dt.year
+            mes = dt.month
+            dia = dt.day
+            nome_mes = meses[mes - 1]
+            trimestre = (mes - 1) // 3 + 1
+            semestre = 1 if mes <= 6 else 2
+            dia_semana = dt.weekday()  # 0=Segunda, 6=Domingo
+            nome_dia_semana = dias_semana[dia_semana]
+            dia_ano = dt.dayofyear
+            semana_ano = dt.isocalendar().week
+            eh_fim_semana = dia_semana >= 5  # Sábado ou Domingo
+            eh_inicio_mes = dia == 1
+            eh_fim_mes = (dt + pd.DateOffset(days=1)).day == 1
+
+            # Inserir na tabela
+            conn.execute('''
+                INSERT OR REPLACE INTO dim_datas 
+                (data_key, ano, mes, dia, nome_mes, trimestre, semestre, 
+                 dia_semana, nome_dia_semana, dia_ano, semana_ano, 
+                 eh_fim_semana, eh_inicio_mes, eh_fim_mes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (data, ano, mes, dia, nome_mes, trimestre, semestre,
+                  dia_semana, nome_dia_semana, dia_ano, semana_ano,
+                  eh_fim_semana, eh_inicio_mes, eh_fim_mes))
+
+        conn.commit()
+        return True, len(todas_datas)
+
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
+
+
+@st.cache_data
+def load_date_dimension():
+    """Carrega a dimensão de datas"""
+    if not os.path.exists('supply_chain.db'):
+        return None
+
+    conn = sqlite3.connect('supply_chain.db', check_same_thread=False)
+
+    try:
+        dim_datas = pd.read_sql_query('''
+            SELECT * FROM dim_datas 
+            ORDER BY data_key
+        ''', conn)
+
+        if not dim_datas.empty:
+            dim_datas['data_key'] = pd.to_datetime(dim_datas['data_key'])
+
+        return dim_datas
+
+    except Exception as e:
+        st.error(f"Erro ao carregar dimensão de datas: {str(e)}")
+        return None
+    finally:
+        conn.close()
 
 # Função para salvar dados no banco
 def save_to_database(scs_df, saving_df, filename):
@@ -147,6 +269,10 @@ def save_to_database(scs_df, saving_df, filename):
         ''', (upload_time, filename, len(scs_df), len(saving_df)))
 
         conn.commit()
+
+        # Popular dimensão de datas
+        populate_date_dimension(scs_df, saving_df)
+
         return True, upload_time
 
     except Exception as e:
@@ -568,19 +694,88 @@ def main():
         compradores = ['Todos'] + list(scs_df['Comprador'].unique())
         comprador_selecionado = st.sidebar.selectbox("Comprador:", compradores)
 
-        # Filtro por período
-        data_inicio = st.sidebar.date_input("Data Início:", min(scs_df['Data']))
-        data_fim = st.sidebar.date_input("Data Fim:", max(scs_df['Data']))
+        # Carregar dimensão de datas para filtros
+        dim_datas = load_date_dimension()
 
-        # Aplicar filtros
-        scs_filtered = scs_df.copy()
-        if comprador_selecionado != 'Todos':
-            scs_filtered = scs_filtered[scs_filtered['Comprador'] == comprador_selecionado]
+        if dim_datas is not None and not dim_datas.empty:
+            # Usar min/max da dimensão de datas
+            data_min = dim_datas['data_key'].min().date()
+            data_max = dim_datas['data_key'].max().date()
 
-        scs_filtered = scs_filtered[
-            (scs_filtered['Data'] >= pd.to_datetime(data_inicio)) &
-            (scs_filtered['Data'] <= pd.to_datetime(data_fim))
-            ]
+            # Filtros de período usando dimensão
+            st.sidebar.markdown("### 📅 Período")
+            data_inicio = st.sidebar.date_input("Data Início:", data_min, min_value=data_min, max_value=data_max)
+            data_fim = st.sidebar.date_input("Data Fim:", data_max, min_value=data_min, max_value=data_max)
+
+            # Filtros adicionais da dimensão
+            st.sidebar.markdown("### 📊 Filtros Temporais")
+
+            # Filtro por trimestre
+            trimestres_disponiveis = sorted(dim_datas['trimestre'].unique())
+            trimestres_selecionados = st.sidebar.multiselect(
+                "Trimestres:",
+                trimestres_disponiveis,
+                default=trimestres_disponiveis,
+                format_func=lambda x: f"Q{x}"
+            )
+
+            # Filtro por mês
+            meses_disponiveis = sorted(dim_datas['mes'].unique())
+            meses_selecionados = st.sidebar.multiselect(
+                "Meses:",
+                meses_disponiveis,
+                default=meses_disponiveis,
+                format_func=lambda x: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+                                       'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'][x - 1]
+            )
+
+            # Filtro por dia da semana
+            incluir_fins_semana = st.sidebar.checkbox("Incluir fins de semana", value=True)
+
+        else:
+            # Fallback para método original se dimensão não estiver disponível
+            data_inicio = st.sidebar.date_input("Data Início:", min(scs_df['Data']))
+            data_fim = st.sidebar.date_input("Data Fim:", max(scs_df['Data']))
+            trimestres_selecionados = None
+            meses_selecionados = None
+            incluir_fins_semana = True
+
+            # Aplicar filtros
+            scs_filtered = scs_df.copy()
+
+            # Filtro por comprador
+            if comprador_selecionado != 'Todos':
+                scs_filtered = scs_filtered[scs_filtered['Comprador'] == comprador_selecionado]
+
+            # Filtros de data básicos
+            scs_filtered = scs_filtered[
+                (scs_filtered['Data'] >= pd.to_datetime(data_inicio)) &
+                (scs_filtered['Data'] <= pd.to_datetime(data_fim))
+                ]
+
+            # Aplicar filtros da dimensão de datas se disponível
+            if dim_datas is not None and not dim_datas.empty:
+                # Criar join com dimensão para aplicar filtros temporais
+                scs_filtered['data_key'] = scs_filtered['Data'].dt.date
+
+                # Filtrar dimensão conforme seleções
+                dim_filtrada = dim_datas.copy()
+
+                if trimestres_selecionados:
+                    dim_filtrada = dim_filtrada[dim_filtrada['trimestre'].isin(trimestres_selecionados)]
+
+                if meses_selecionados:
+                    dim_filtrada = dim_filtrada[dim_filtrada['mes'].isin(meses_selecionados)]
+
+                if not incluir_fins_semana:
+                    dim_filtrada = dim_filtrada[dim_filtrada['eh_fim_semana'] == False]
+
+                # Aplicar filtro final
+                datas_validas = dim_filtrada['data_key'].dt.date.tolist()
+                scs_filtered = scs_filtered[scs_filtered['data_key'].isin(datas_validas)]
+
+                # Remover coluna auxiliar
+                scs_filtered = scs_filtered.drop('data_key', axis=1)
     else:
         return  # Sair da função se não há dados para processar
 
