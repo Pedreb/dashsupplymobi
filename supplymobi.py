@@ -613,7 +613,32 @@ def main():
     # Inicializar banco de dados
     init_database()
 
-    st.markdown('<h1 class="main-header">🚛 Dashboard Supply Chain - Mobi Transportes</h1>', unsafe_allow_html=True)
+    # Container simples com logo e título centralizados
+    st.markdown("""
+    <div style="text-align: center; padding: 1rem 0 2rem 0; margin-bottom: 1rem;">
+    """, unsafe_allow_html=True)
+
+    # Logo centralizada
+    logo_path = r"C:\Users\Pedro Curry\OneDrive\Área de Trabalho\Logos - B.I\Logo Mobi.jpeg"
+
+    if os.path.exists(logo_path):
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.image(logo_path, width=300)
+
+    # Título centralizado logo abaixo
+    st.markdown("""
+    <h1 style="font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 700; 
+               color: #EF8740; text-align: center; margin: 1.5rem 0 0 0; 
+               text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+               background: linear-gradient(135deg, #EF8740 0%, #000000 100%);
+               -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+               background-clip: text;">
+        🚛 Dashboard Supply Chain - Mobi Transportes
+    </h1>
+    """, unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # Upload do arquivo
     st.markdown("### 📁 Upload do Arquivo de Dados")
