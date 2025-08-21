@@ -711,6 +711,14 @@ def main():
             scs_df, saving_df = create_sample_data()
             st.warning("⚠️ Os dados mostrados abaixo são apenas exemplos para demonstração.")
 
+    scs_filtered = pd.DataFrame()
+
+    # Sidebar com filtros
+    if scs_df is not None and not scs_df.empty:
+        scs_filtered = scs_df.copy()  # Inicializar com todos os dados
+    else:
+        scs_filtered = pd.DataFrame()  # DataFrame vazio se não há dados
+
     # Sidebar com filtros
     if scs_df is not None and not scs_df.empty:
         st.sidebar.markdown("## 🔧 Filtros")
