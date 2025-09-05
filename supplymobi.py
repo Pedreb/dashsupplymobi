@@ -106,21 +106,90 @@ def create_date_dimension():
     conn.close()
 
 
+def apply_calendar_filters(scs_df, saving_df, data_inicio, data_fim,
+                           trimestres_selecionados=None, meses_selecionados=None,
+                           incluir_fins_semana=True):
+    """
+    Aplica filtros usando a tabela calendário nas duas abas
+    """
+
+    # Carregar dimensão de datas
+    dim_datas = load_date_dimension()
+
+    if dim_datas is None or dim_datas.empty:
+        # Fallback para filtro básico se dimensão não estiver disponível
+        scs_filtered = scs_df[
+            (scs_df['Data'] >= pd.to_datetime(data_inicio)) &
+            (scs_df['Data'] <= pd.to_datetime(data_fim))
+            ]
+        saving_filtered = saving_df[
+            (saving_df['Data'] >= pd.to_datetime(data_inicio)) &
+            (saving_df['Data'] <= pd.to_datetime(data_fim))
+            ]
+        return scs_filtered, saving_filtered
+
+    # Filtrar dimensão conforme seleções
+    dim_filtrada = dim_datas.copy()
+
+    # Filtro por período
+    dim_filtrada = dim_filtrada[
+        (dim_filtrada['data_key'].dt.date >= data_inicio) &
+        (dim_filtrada['data_key'].dt.date <= data_fim)
+        ]
+
+    # Filtros adicionais da dimensão
+    if trimestres_selecionados:
+        dim_filtrada = dim_filtrada[dim_filtrada['trimestre'].isin(trimestres_selecionados)]
+
+    if meses_selecionados:
+        dim_filtrada = dim_filtrada[dim_filtrada['mes'].isin(meses_selecionados)]
+
+    if not incluir_fins_semana:
+        dim_filtrada = dim_filtrada[dim_filtrada['eh_fim_semana'] == False]
+
+    # Obter datas válidas
+    datas_validas = set(dim_filtrada['data_key'].dt.date)
+
+    # Aplicar filtro na aba SC's
+    scs_filtered = scs_df[scs_df['Data'].dt.date.isin(datas_validas)].copy()
+
+    # Aplicar filtro na aba Saving
+    saving_filtered = saving_df[saving_df['Data'].dt.date.isin(datas_validas)].copy()
+
+    return scs_filtered, saving_filtered
+
+
 def populate_date_dimension(scs_df, saving_df):
-    """Popula a tabela dimensão com todas as datas únicas"""
+    """Popula a tabela dimensão com todas as datas únicas das duas abas"""
     conn = sqlite3.connect('supply_chain.db', check_same_thread=False)
 
     try:
-        # Coletar todas as datas únicas
-        datas_scs = set(pd.to_datetime(scs_df['Data']).dt.date)
-        datas_saving = set(pd.to_datetime(saving_df['Data']).dt.date)
+        # Coletar todas as datas únicas das duas abas
+        datas_scs = set()
+        datas_saving = set()
 
-        # Se houver coluna Data da Compra, incluir também
+        # Extrair datas da aba SC's
+        if 'Data' in scs_df.columns:
+            datas_scs.update(pd.to_datetime(scs_df['Data']).dt.date)
         if 'Data da Compra' in scs_df.columns:
-            datas_compra = set(pd.to_datetime(scs_df['Data da Compra']).dt.date)
-            todas_datas = datas_scs.union(datas_saving).union(datas_compra)
-        else:
-            todas_datas = datas_scs.union(datas_saving)
+            datas_scs.update(pd.to_datetime(scs_df['Data da Compra']).dt.date)
+
+        # Extrair datas da aba Saving
+        if 'Data' in saving_df.columns:
+            datas_saving.update(pd.to_datetime(saving_df['Data']).dt.date)
+
+        # Unir todas as datas
+        todas_datas = datas_scs.union(datas_saving)
+
+        # Se não há datas, criar pelo menos um ano de dimensão
+        if not todas_datas:
+            inicio = datetime(2024, 1, 1).date()
+            fim = datetime(2025, 12, 31).date()
+            todas_datas = set()
+            data_atual = inicio
+            while data_atual <= fim:
+                todas_datas.add(data_atual)
+                data_atual += pd.DateOffset(days=1).date()
 
         # Limpar tabela anterior
         conn.execute('DELETE FROM dim_datas')
@@ -131,11 +200,11 @@ def populate_date_dimension(scs_df, saving_df):
 
         dias_semana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 
-        # Inserir cada data
+        # Inserir cada data na dimensão
         for data in todas_datas:
             dt = pd.to_datetime(data)
 
-            # Calcular atributos
+            # Calcular atributos da data
             ano = dt.year
             mes = dt.month
             dia = dt.day
@@ -713,13 +782,7 @@ def main():
 
     scs_filtered = pd.DataFrame()
 
-    # Sidebar com filtros
-    if scs_df is not None and not scs_df.empty:
-        scs_filtered = scs_df.copy()  # Inicializar com todos os dados
-    else:
-        scs_filtered = pd.DataFrame()  # DataFrame vazio se não há dados
-
-    # Sidebar com filtros
+    # Sidebar com filtros baseados na tabela calendário
     if scs_df is not None and not scs_df.empty:
         st.sidebar.markdown("## 🔧 Filtros")
 
@@ -767,50 +830,29 @@ def main():
 
         else:
             # Fallback para método original se dimensão não estiver disponível
+            st.sidebar.warning("⚠️ Dimensão de datas não disponível. Usando filtros básicos.")
             data_inicio = st.sidebar.date_input("Data Início:", min(scs_df['Data']))
             data_fim = st.sidebar.date_input("Data Fim:", max(scs_df['Data']))
             trimestres_selecionados = None
             meses_selecionados = None
             incluir_fins_semana = True
 
-            # Aplicar filtros
-            scs_filtered = scs_df.copy()
+        # Aplicar filtros usando a tabela calendário
+        scs_filtered, saving_filtered = apply_calendar_filters(
+            scs_df, saving_df, data_inicio, data_fim,
+            trimestres_selecionados, meses_selecionados, incluir_fins_semana
+        )
 
-            # Filtro por comprador
-            if comprador_selecionado != 'Todos':
-                scs_filtered = scs_filtered[scs_filtered['Comprador'] == comprador_selecionado]
+        # Aplicar filtro por comprador APÓS os filtros de data
+        if comprador_selecionado != 'Todos':
+            scs_filtered = scs_filtered[scs_filtered['Comprador'] == comprador_selecionado]
+            # Também filtrar saving por comprador se necessário
+            if 'Comprador' in saving_filtered.columns:
+                saving_filtered = saving_filtered[saving_filtered['Comprador'] == comprador_selecionado]
 
-            # Filtros de data básicos
-            scs_filtered = scs_filtered[
-                (scs_filtered['Data'] >= pd.to_datetime(data_inicio)) &
-                (scs_filtered['Data'] <= pd.to_datetime(data_fim))
-                ]
-
-            # Aplicar filtros da dimensão de datas se disponível
-            if dim_datas is not None and not dim_datas.empty:
-                # Criar join com dimensão para aplicar filtros temporais
-                scs_filtered['data_key'] = scs_filtered['Data'].dt.date
-
-                # Filtrar dimensão conforme seleções
-                dim_filtrada = dim_datas.copy()
-
-                if trimestres_selecionados:
-                    dim_filtrada = dim_filtrada[dim_filtrada['trimestre'].isin(trimestres_selecionados)]
-
-                if meses_selecionados:
-                    dim_filtrada = dim_filtrada[dim_filtrada['mes'].isin(meses_selecionados)]
-
-                if not incluir_fins_semana:
-                    dim_filtrada = dim_filtrada[dim_filtrada['eh_fim_semana'] == False]
-
-                # Aplicar filtro final
-                datas_validas = dim_filtrada['data_key'].dt.date.tolist()
-                scs_filtered = scs_filtered[scs_filtered['data_key'].isin(datas_validas)]
-
-                # Remover coluna auxiliar
-                scs_filtered = scs_filtered.drop('data_key', axis=1)
     else:
-        return  # Sair da função se não há dados para processar
+        scs_filtered = pd.DataFrame()
+
 
     # === SEÇÃO 1: SPENDING ANALYSIS ===
     st.markdown('''
@@ -939,7 +981,7 @@ def main():
             title_font_color='#000000',
             margin=dict(l=20, r=20, t=50, b=50),  # Margem superior aumentada
             height=450,  # Altura aumentada para acomodar rótulos
-            yaxis=dict(range=[0, spend_por_comprador['Valor'].max() * 1.15])  # 15% acima do valor máximo
+            yaxis=dict(range=[0, spend_por_comprador['Valor'].max() * 1.30])  # 15% acima do valor máximo
         )
         st.plotly_chart(fig_spend, use_container_width=True)
 
@@ -1071,7 +1113,7 @@ def main():
             title_font_color='#000000',
             margin=dict(l=20, r=20, t=50, b=50),
             height=450,
-            yaxis=dict(range=[0, tmc_por_comprador['TMC'].max() * 1.15])
+            yaxis=dict(range=[0, tmc_por_comprador['TMC'].max() * 1.30])
         )
         st.plotly_chart(fig_tmc, use_container_width=True)
 
@@ -1204,7 +1246,7 @@ def main():
             title_font_color='#000000',
             margin=dict(l=20, r=20, t=50, b=50),
             height=450,
-            yaxis=dict(range=[0, pmps_por_comprador['PMP'].max() * 1.15])
+            yaxis=dict(range=[0, pmps_por_comprador['PMP'].max() * 1.30])
         )
         st.plotly_chart(fig_pmps, use_container_width=True)
 
@@ -1341,7 +1383,7 @@ def main():
             title_font_color='#000000',
             margin=dict(l=20, r=20, t=50, b=50),
             height=450,
-            yaxis=dict(range=[0, pmpp_por_comprador['PMPP'].max() * 1.15])
+            yaxis=dict(range=[0, pmpp_por_comprador['PMPP'].max() * 1.30])
         )
         st.plotly_chart(fig_pmpp, use_container_width=True)
 
@@ -1477,7 +1519,7 @@ def main():
             margin=dict(l=20, r=20, t=50, b=50),
             height=450,
             xaxis_tickangle=-45,
-            yaxis=dict(range=[0, gastos_fornecedor['Valor'].max() * 1.15])
+            yaxis=dict(range=[0, gastos_fornecedor['Valor'].max() * 1.30])
         )
         st.plotly_chart(fig_fornecedor, use_container_width=True)
     else:
@@ -1620,7 +1662,7 @@ def main():
             margin=dict(l=20, r=20, t=50, b=50),
             height=450,
             xaxis_tickangle=-45,
-            yaxis=dict(range=[0, gastos_categoria['Valor'].max() * 1.15])
+            yaxis=dict(range=[0, gastos_categoria['Valor'].max() * 1.30])
         )
         st.plotly_chart(fig_categoria, use_container_width=True)
     else:
@@ -1780,7 +1822,7 @@ def main():
             title_font_color='#000000',
             margin=dict(l=20, r=20, t=50, b=50),
             height=400,
-            yaxis=dict(range=[0, prioridade_valores['Valor'].max() * 1.15])
+            yaxis=dict(range=[0, prioridade_valores['Valor'].max() * 1.30])
         )
         st.plotly_chart(fig_bar_valor, use_container_width=True)
 
@@ -1897,15 +1939,15 @@ def main():
 
     if not saving_df.empty:
         # Mapear coluna de saving
-        saving_col = find_column(saving_df, ['Redução R$', 'Reducao R$', 'Saving', 'Economia', 'Redução'])
-        comprador_col_saving = find_column(saving_df, ['Comprador', 'Buyer', 'Responsável'])
+        saving_col = find_column(saving_filtered, ['Redução R$', 'Reducao R$', 'Saving', 'Economia', 'Redução'])
+        comprador_col_saving = find_column(saving_filtered, ['Comprador', 'Buyer', 'Responsável'])
 
         if saving_col and comprador_col_saving:
             col1, col2 = st.columns([3, 1])
 
             with col1:
                 # Gráfico Saving por comprador
-                saving_por_comprador = saving_df.groupby(comprador_col_saving)[saving_col].sum().reset_index()
+                saving_por_comprador = saving_filtered.groupby(comprador_col_saving)[saving_col].sum().reset_index()
                 fig_saving = px.bar(
                     saving_por_comprador,
                     x=comprador_col_saving,
@@ -1927,17 +1969,18 @@ def main():
                     font=dict(size=11, color='#000000'),
                     title_font_size=14,
                     title_font_color='#000000',
-                    margin=dict(l=20, r=20, t=50, b=20),
-                    height=400
+                    margin=dict(l=20, r=20, t=80, b=20),
+                    height=400,
+                    yaxis=dict(range=[0, max(saving_por_comprador[saving_col].max() * 1.4, 100)])
                 )
                 st.plotly_chart(fig_saving, use_container_width=True)
 
             with col2:
                 # KPI Saving Total
-                saving_total = saving_df[saving_col].sum()
+                saving_total = saving_filtered[saving_col].sum()
                 st.markdown(create_kpi_card(saving_total, "Saving Total"), unsafe_allow_html=True)
 
-            # Gráfico Percentual de Saving por Comprador (abaixo dos anteriores)
+
             # Gráfico Percentual de Saving por Comprador (abaixo dos anteriores)
             if comprador_col_saving:
                 st.markdown('''
@@ -2037,7 +2080,7 @@ def main():
                 ''', unsafe_allow_html=True)
 
                 # Calcular saving total por comprador (da aba Saving)
-                saving_por_comprador_total = saving_df.groupby(comprador_col_saving)[saving_col].sum().reset_index()
+                saving_por_comprador_total = saving_filtered.groupby(comprador_col_saving)[saving_col].sum().reset_index()
 
                 # Calcular compras totais por comprador (da aba SC's)
                 compras_por_comprador = scs_filtered.groupby('Comprador')['Valor'].sum().reset_index()
@@ -2081,7 +2124,7 @@ def main():
                     title_font_color='#000000',
                     margin=dict(l=20, r=20, t=50, b=50),
                     height=450,
-                    yaxis=dict(range=[0, percentual_saving['Percentual_Saving'].max() * 1.15])
+                    yaxis=dict(range=[0, percentual_saving['Percentual_Saving'].max() * 1.30])
                 )
                 st.plotly_chart(fig_perc_saving, use_container_width=True)
         else:
